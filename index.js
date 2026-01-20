@@ -1,9 +1,20 @@
 const express = require("express")
 const app = express()
+const mongoose = require("mongoose")
 
 
 app.set("view engine", "ejs")
 app.use(express.urlencoded())
+
+// CRUD 
+
+const userSchema = new mongoose.Schema({
+  username:{type:String, required:true, trim:true},
+  email:{type:String, unique:true, required:true, trim:true},
+  password:{type:String, required:true}
+})
+
+const usermodel = mongoose.model("user_collection", userSchema)
 
 const users =[]
 const name = "Shola"
@@ -54,11 +65,24 @@ app.get("/signup",(req, res)=>{
 })
 
 
-app.post("/user/signup",(req, res)=>{
-  //  console.log(req.body);
-   users.push(req.body)
-   console.log(users, "All registered users");
-   res.redirect("/login")
+app.post("/user/signup", async(req, res)=>{
+  try {
+    console.log(req.body);
+  const newuser = await  usermodel.create(req.body)    
+   console.log(newuser);
+   if (newuser) {
+    return res.redirect("/login")
+   }
+   return res.send("error occured")
+  } catch (error) {
+    console.log(error.message);
+    if (error.code == 11000) {
+      return res.send("user already exist")
+    }
+    if (error.message.includes("user_collection validation failed")) {
+      return res.send("All fields are mandatory")
+    }
+  }
 })
 
 app.get("/login", (req, res)=>{
@@ -91,6 +115,29 @@ app.post("/userLogin", (req, res) => {
     res.send("Invalid credentials")
   }
 })
+
+
+const URI = "mongodb+srv://aishatadekunle877:aishat@cluster0.t92x8pf.mongodb.net/january2026?appName=Cluster0"
+
+
+const connect = async() =>{
+   try {
+    
+   const connection = await mongoose.connect(URI)
+  //  console.log(connection, "datbase connection result");
+   if (connection) {
+    console.log("database connected successfully");
+    
+   }
+
+   } catch (error) {
+    console.log(error);
+    
+   }
+}
+connect()
+
+
 
 const port = 8004
 app.listen(port,()=>{
