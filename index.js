@@ -1,6 +1,8 @@
+const { log } = require("console")
 const express = require("express")
 const app = express()
 const mongoose = require("mongoose")
+const { type } = require("os")
 
 
 app.set("view engine", "ejs")
@@ -15,6 +17,14 @@ const userSchema = new mongoose.Schema({
 })
 
 const usermodel = mongoose.model("user_collection", userSchema)
+
+const todoschema = new mongoose.Schema({
+  title:{type:String, required:true, trim:true},
+  description:{type:String, required:true, trim:true},
+  completed:{type:Boolean, default:false}
+})
+
+const todomodel = mongoose.model("todo_collection", todoschema)
 
 const users =[]
 const name = "Shola"
@@ -64,12 +74,16 @@ app.get("/signup",(req, res)=>{
   res.render("signup")
 })
 
+app.get("/todo", (req, res)=>{
+  res.render("todo")
+})
 
 app.post("/user/signup", async(req, res)=>{
   try {
     console.log(req.body);
   const newuser = await  usermodel.create(req.body)    
    console.log(newuser);
+
    if (newuser) {
     return res.redirect("/login")
    }
@@ -79,6 +93,7 @@ app.post("/user/signup", async(req, res)=>{
     if (error.code == 11000) {
       return res.send("user already exist")
     }
+
     if (error.message.includes("user_collection validation failed")) {
       return res.send("All fields are mandatory")
     }
@@ -90,6 +105,7 @@ app.get("/login", (req, res)=>{
 })
 
 app.get("/dashboard", (req, res)=>{
+
   if (currUser) {
    return res.render("dashboard",{name:currUser})
   }
@@ -97,23 +113,43 @@ app.get("/dashboard", (req, res)=>{
 })
 
 
-app.post("/userLogin", (req, res) => {
-  const details = req.body
-  console.log(details);
-  
- const search = users.find(member => {
-    return details.email === member.email && details.password === member.password
-  })
-
-  console.log(search , "correct user");
-  
-
-  if (search) {
-    currUser = search.username
-   res.redirect("/dashboard")
-  } else {
-    res.send("Invalid credentials")
+app.post("/userLogin", async (req, res) => {
+ 
+  try {
+     const {email , password } = req.body
+         if (!email || !password) {
+      return res.send("Invalid Login Credentials")
+     }
+     const user = await usermodel.findOne({email})
+     
+     console.log(user, "Result for query find");
+     
+     if (!user && user.password !== password) {
+      return res.send("Invalid email or password")
+     }
+ 
+     currUser = user.email    
+      return res.redirect("/dashboard")
+    // else { return res.redirect("/dashboard")}
+  } catch (error) {
+    console.log(error);
+    
   }
+})
+
+app.post("/addtodo",async (req, res)=>{
+  console.log(req.body);
+  try {
+   const newTodo =  await todomodel.create(req.body)
+   if (newTodo) {
+    return res.redirect("/todo")
+   }
+    return res.send("unable to add todo")
+  } catch (error) {
+    console.log(error);
+    
+  }
+  
 })
 
 
