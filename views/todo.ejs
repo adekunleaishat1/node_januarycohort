@@ -12,5 +12,32 @@
         <input type="text" name="description">
         <button>AddTodo</button>
     </form>
+
+
+    <% alltodo.forEach(element => { %>
+        <p><%= element.title %></p>
+        <p><%= element.description %></p>
+        
+        <form action="/completetodo/<%= element._id %>" method="post">
+            <% if (element.completed) { %>
+               <input name="check" value="<%= element.completed %>" type="checkbox" onclick="this.form.submit()" checked>
+            <% }else{ %>
+               <input name="check" value="<%= element.completed %>" type="checkbox" onclick="this.form.submit()" >
+            <% } %>
+        </form>
+             
+
+        <form action="/deletetodo/<%= element._id %>" method="post">
+           <button>Delete</button>
+        </form>
+    <% }) %>
 </body>
 </html>
+
+<script>
+
+    async function update(params) {
+        console.log(params);
+        
+    }
+</script>
