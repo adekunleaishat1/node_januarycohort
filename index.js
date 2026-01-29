@@ -3,12 +3,17 @@ const express = require("express")
 const app = express()
 const mongoose = require("mongoose")
 require("dotenv").config()
+ const connect =  require("./Database/db.connect")
+const todorouter = require("./routes/todo.route")
+
+
+
 
 app.set("view engine", "ejs")
 app.use(express.urlencoded())
+app.use("/", todorouter)
 
 // CRUD 
-
 const userSchema = new mongoose.Schema({
   username:{type:String, required:true, trim:true},
   email:{type:String, unique:true, required:true, trim:true},
@@ -17,13 +22,7 @@ const userSchema = new mongoose.Schema({
 
 const usermodel = mongoose.model("user_collection", userSchema)
 
-const todoschema = new mongoose.Schema({
-  title:{type:String, required:true, trim:true},
-  description:{type:String, required:true, trim:true},
-  completed:{type:Boolean, default:false}
-})
 
-const todomodel = mongoose.model("todo_collection", todoschema)
 
 const users =[]
 const name = "Shola"
@@ -73,32 +72,7 @@ app.get("/signup",(req, res)=>{
   res.render("signup")
 })
 
-app.get("/todo", async(req, res)=>{
-  try {
-   const alltodo =  await todomodel.find()
-   console.log(alltodo, "All todo information.");
-     res.render("todo",{alltodo})
-  } catch (error) {
-    console.log(error);
-    
-  }
-})
-app.post("/deletetodo/:id", async(req,res)=>{
-try {
- 
-  const {id} = req.params
-   console.log(id);
-  const deleteuser =  await todomodel.findByIdAndDelete(id)
-  console.log(deleteuser, "deleted todo");
-  if (deleteuser) {
-    res.redirect("/todo")
-  }
-} catch (error) {
-  console.log("unable to delete user");
-  
-}
 
-})
 app.post("/user/signup", async(req, res)=>{
   try {
     console.log(req.body);
@@ -158,81 +132,14 @@ app.post("/userLogin", async (req, res) => {
   }
 })
 
-app.post("/addtodo",async (req, res)=>{
-  console.log(req.body);
-  try {
-   const newTodo =  await todomodel.create(req.body)
-   if (newTodo) {
-    return res.redirect("/todo")
-   }
-    return res.send("unable to add todo")
-  } catch (error) {
-    console.log(error);
-    
-  }
-  
-})
-app.post("/completetodo/:id",async (req,res)=>{
-   console.log(req.params);
-  
-   const {id} = req.params
-   const {check} = req.body
-  try{
-    console.log(check, "check value");
-   if (check == "false") {
-    const updated =  await todomodel.findByIdAndUpdate(id, 
-     {completed:true} 
-      )
-
-      res.redirect("/todo")
-      
-   }else{
-     await todomodel.findByIdAndUpdate(id, 
-     {completed:false} 
-    )
-      res.redirect("/todo")
-   }
-  }catch (error){
-
-  }
-})
 
 
-const URI = process.env.MONGOURI
 
 
-const connect = async() =>{
-   try {
-    
-   const connection = await mongoose.connect(URI)
-  //  console.log(connection, "datbase connection result");
-   if (connection) {
-    console.log("database connected successfully");
-    
-   }
 
-   } catch (error) {
-    console.log(error);
-    
-   }
-}
 connect()
-
-
-
 const port = 8004
 app.listen(port,()=>{
 console.log(`Server is running on port ${port}`)
 })
 
-// const username = "Shla"
-
-// console.log(username, "show the value of username");
-
-// let alluser = ["Shola", "John", "Doe"]
-// console.log(alluser, "All user informtion");
-
-// alluser.push("Smith")
-
-
-// console.log(alluser, "All user informtion");
