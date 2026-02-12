@@ -5,7 +5,8 @@ const userSchema = mongoose.Schema({
     email:{type:String, trim:true, unique:true, required:true},
     password:{type:String, trim:true, required:true},
     profilePicture:{type:String, trim:true},
-    verified:{type:Boolean, default:false}
+    verified:{type:Boolean, default:false},
+    otp:{type:String}
 },{timestamps:true})
 
 const userModel = mongoose.model("user_collection", userSchema)
