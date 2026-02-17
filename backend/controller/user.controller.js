@@ -65,6 +65,8 @@ const userLogin = async(req, res) =>{
 
 const Verifyemail = async(req, res) =>{
   try {
+    console.log(req.body);
+    
     const {otp} = req.body
    const otpseen = await usermodel.findOne({otp})
    if (!otpseen) {
@@ -89,8 +91,10 @@ const VerifyToken = async(req, res) =>{
     const token = req.headers.authorization.split(" ")[1]
    const verifiedToken =  await jwt.verify(token,"secretkey")
    console.log(verifiedToken);
+   
    if (verifiedToken) {
-        return res.status(200).json({message:"token verified successfully"})
+    const user = await usermodel.findOne({email:verifiedToken.email})
+        return res.status(200).json({message:"token verified successfully", user})
     
    }
     
