@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs")
  const Emailverificationmail = require("../utils/emailverification")
  const getnewOtp = require("../utils/otp-generator")
  const jwt = require("jsonwebtoken")
+const cloudinary = require("../utils/cloudinary")
 
 const userSignup =  async (req, res) =>{
   try {
@@ -50,7 +51,7 @@ const userLogin = async(req, res) =>{
        if (!existUser.verified) {
          return res.status(400).json({message:"email is not verified, please check your mail.", status:false})
        }
-       const token = await jwt.sign({email},"secretkey",{expiresIn:60})
+       const token = await jwt.sign({email},process.env.JWT_SECRETKEY,{expiresIn:600})
       return res.status(200).json({message:"Login successful", token, status:true})
       
      }
@@ -89,13 +90,12 @@ const Verifyemail = async(req, res) =>{
 const VerifyToken = async(req, res) =>{
   try {
     const token = req.headers.authorization.split(" ")[1]
-   const verifiedToken =  await jwt.verify(token,"secretkey")
+   const verifiedToken =  await jwt.verify(token,process.env.JWT_SECRETKEY)
    console.log(verifiedToken);
    
    if (verifiedToken) {
     const user = await usermodel.findOne({email:verifiedToken.email})
         return res.status(200).json({message:"token verified successfully", user})
-    
    }
     
   } catch (error) {
@@ -105,4 +105,28 @@ const VerifyToken = async(req, res) =>{
   }
 }
 
-module.exports = {userSignup, userLogin, Verifyemail, VerifyToken}
+const profileUpdate = async (req, res) =>{
+  try {
+    const {profilepicture} = req.body
+    console.log(req.user, "user id");
+    const id = req.user
+    
+    if (!profilepicture) {
+      return res.status(400).json({message:"profilepicture is empty", status:false})
+    }
+    const image =  await cloudinary.uploader.upload(profilepicture)
+     console.log(image.secure_url);
+     if (image) {
+      const newprofile =  await usermodel.findByIdAndUpdate(id, 
+          {$set:{profilePicture:image.secure_url}},
+          {new:true}
+        )
+       
+      return res.status(200).json({message:"profile updated successfully", status:true, newprofile})     
+     }
+  } catch (error) {
+    return res.status(500).json({message:error.message})
+    
+  }
+}
+module.exports = {userSignup, userLogin, Verifyemail, VerifyToken,profileUpdate}
