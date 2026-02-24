@@ -3,11 +3,13 @@ const app = express()
 require("dotenv").config()
 const connect = require("./Database/db.config")
 const userRouter = require("./routes/user.route")
+const productroute = require("./routes/product.route")
 const cors = require('cors')
 
 app.use(cors({origin:"*"}))
 app.use(express.json({limit:"50mb"}))
 app.use("/user", userRouter)
+app.use("/product", productroute)
 
 
 
